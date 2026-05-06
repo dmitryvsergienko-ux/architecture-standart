@@ -1,0 +1,27 @@
+@startuml C4-Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title C4 — System Context: Банк «Стандарт», MVP открытия депозитов онлайн
+
+Person(client, "Клиент", "Новый или существующий клиент банка")
+Person(branch, "Сотрудник отделения", "Фронт-офис; KYC и открытие депозитов")
+Person(op_cc, "Оператор кол-центра банка", "Принимает обращения с сайта и звонки")
+Person(dep_mgr, "Менеджер БО депозитов", "Согласует ставки и заявки")
+Person(cred_mgr, "Менеджер БО кредитов", "Ведёт риск-метрики кредитного портфеля")
+
+System(bank, "Банк «Стандарт» — цифровой канал депозитов", "Приём заявок с сайта и из ИБ, расчёт и хранение ставок, согласование заявок бэк-офисом, открытие депозитов в АБС, СМС-уведомления")
+
+System_Ext(telecom, "Telecom-оператор", "Доставка СМС абонентам")
+System_Ext(pccs, "Система партнёрского кол-центра", "Внешняя; в MVP не интегрирована с банком")
+
+Rel(client, bank, "HTTPS (сайт, интернет-банк); визит в отделение")
+Rel(branch, bank, "Delphi-клиент АБС; KYC нового клиента")
+Rel(op_cc, bank, "Веб-UI системы кол-центра банка")
+Rel(dep_mgr, bank, "Веб-UI Deposit Service и Rates Service")
+Rel(cred_mgr, bank, "Веб-UI Rates Service (раздел кред. риска)")
+Rel(bank, telecom, "Отправка СМС (SMPP/HTTPS через СМС-шлюз)")
+Rel(telecom, client, "СМС-уведомление")
+
+@enduml

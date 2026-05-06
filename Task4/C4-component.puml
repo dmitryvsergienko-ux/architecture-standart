@@ -1,0 +1,62 @@
+@startuml C4-Component-Task4
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Component.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_TOP_DOWN()
+
+title C4 — Component: распределение ставок (фокус — новый SFTP Export Service)
+
+Person(op_cc, "Оператор\nкол-центра банка", "")
+Person(op_pcc, "Оператор\nпартнёрского кол-центра", "")
+Person(dep_mgr, "Менеджер БО\nдепозитов", "")
+
+System_Boundary(bank, "Банк «Стандарт»") {
+
+    Container(rates, "Rates Service", "Java/Spring Boot", "Хранение и публикация ставок (Task 3)")
+    ContainerDb(rates_db, "Rates DB", "PostgreSQL", "Ставки, история")
+    ContainerDb(redis, "Rates Cache", "Redis", "Кэш для онлайн-каналов")
+
+    Container(kafka, "Apache Kafka", "Kafka 3.x cluster", "Топик: rates.updated\n(snapshot полного списка ставок)")
+
+    Container(api_gw, "API Gateway", "Spring Cloud Gateway", "Аутентификация, rate-limiting")
+
+    Container(ccs, "Система кол-центра банка", "React + Java/Spring + PostgreSQL\nПлатформа подрядчика", "НОВОЕ: раздел «Депозитные ставки»; REST-клиент к Rates Service; локальный кэш TTL 1 час")
+
+    Container_Boundary(sftp_exp, "SFTP Export Service (НОВЫЙ, Java/Spring Boot)") {
+        Component(sftp_consumer, "Kafka Consumer", "Spring Kafka", "Подписан на топик rates.updated;\nдекодирует snapshot ставок")
+        Component(sftp_filegen,  "Rates File Generator", "Java + OpenCSV", "Формирует CSV-файл:\nпродукт, валюта, срок, мин. сумма,\nставка, дата актуальности")
+        Component(sftp_uploader, "SFTP Uploader",   "Apache Mina SSHD client", "Загружает CSV на SFTP-сервер;\nиспользует SSH-ключ partner_export_key")
+        Component(sftp_retry,    "Retry & Alert Manager", "Spring Retry + Micrometer", "Ретраи при недоступности SFTP;\nалерт в Prometheus при > 3 неудач\nили > 30 мин без выгрузки")
+    }
+
+    Container(sftp_srv, "SFTP Server", "Внутренний SSH/SFTP в DMZ", "НОВЫЙ: каталог /partner/rates/;\nдоступ — SSH-ключ только на чтение для партнёра")
+}
+
+System_Ext(pccs, "Система партнёрского\nкол-центра", "Внешняя; pull-загрузка файла\nпо расписанию (e.g. каждые 15 мин)")
+
+' === Persons ===
+Rel(dep_mgr, rates, "Веб-UI: публикация ставок", "HTTPS")
+Rel(op_cc,   ccs,   "Веб-UI: «Депозитные ставки»", "HTTPS")
+Rel(op_pcc,  pccs,  "Использует UI", "")
+
+' === Existing (Task 3): Rates Service core ===
+Rel(rates, rates_db, "Read/Write", "JDBC")
+Rel(rates, redis,    "Read/Write кэша", "Redis protocol")
+Rel(rates, kafka,    "publish: rates.updated\n(полный snapshot)", "Kafka")
+
+' === Bank call-center → Rates Service (online) ===
+Rel(ccs, api_gw,  "GET /api/v1/rates/public", "HTTPS / REST")
+Rel(api_gw, rates, "REST",                    "HTTPS / REST")
+
+' === New SFTP pipeline (Kafka → file → SFTP) ===
+Rel(kafka,         sftp_consumer, "consume: rates.updated", "Kafka")
+Rel(sftp_consumer, sftp_filegen,  "events со snapshot", "in-process")
+Rel(sftp_filegen,  sftp_uploader, "CSV-файл", "in-process")
+Rel(sftp_uploader, sftp_srv,      "PUT /partner/rates/rates_<ts>.csv", "SFTP / SSH")
+Rel(sftp_uploader, sftp_retry,    "ошибки доставки", "in-process")
+Rel(sftp_retry,    sftp_uploader, "повторная попытка", "in-process")
+
+' === External partner pulls from SFTP ===
+Rel(pccs, sftp_srv, "GET /partner/rates/*.csv\n(pull по расписанию)", "SFTP / SSH")
+
+@enduml

@@ -1,0 +1,92 @@
+@startuml C4-Container
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+LAYOUT_TOP_DOWN()
+
+title C4 — Container: Банк «Стандарт», MVP открытия депозитов онлайн (ИБ и АБС детализированы)
+
+Person(client, "Клиент", "Новый или существующий")
+Person(branch, "Сотрудник отделения", "Фронт-офис")
+Person(op_cc, "Оператор кол-центра банка", "")
+Person(dep_mgr, "Менеджер БО депозитов", "")
+Person(cred_mgr, "Менеджер БО кредитов", "")
+
+System_Boundary(bank, "Банк «Стандарт»") {
+
+    Container(site, "Сайт", "PHP + React", "Публичные ставки депозитов; форма подачи заявки")
+
+    System_Boundary(ib, "Интернет-банк") {
+        Container(ib_web, "ИБ Web Monolith", "ASP.NET MVC 4.5,\\nплатформа подрядчика", "Существующий: вход, платежи, тек. счёт")
+        Container(ib_dep, "ИБ Deposit Module", "Java/Spring + React", "НОВЫЙ изолированный\\nмикрофронт депозитов")
+        ContainerDb(ib_db, "ИБ MS SQL", "MS SQL Server", "Клиентский профиль, сессии")
+    }
+
+    System_Boundary(abs, "АБС") {
+        Container(abs_dc, "АБС Delphi Client", "Delphi", "Десктоп-клиент\\nдля фронт-/бэк-офиса")
+        Container(abs_ad, "ABS Adapter", "Java/Spring Boot", "НОВЫЙ: Kafka↔АБС;\\nзапись депозитов через API АБС")
+        ContainerDb(abs_ora, "АБС Oracle DB", "Oracle + PL/SQL", "Учёт счетов и депозитов")
+    }
+
+    Container(ccs, "Система кол-центра банка", "React + Java/Spring + PostgreSQL", "Платформа подрядчика;\\nKafka consumer для заявок с сайта (доработка)")
+
+    Container(api_gw, "API Gateway", "Spring Cloud Gateway", "НОВЫЙ: единая точка для Сайта и ИБ;\\nаутентификация, rate-limiting")
+    Container(dep, "Deposit Service", "Java/Spring Boot", "НОВЫЙ: жизненный цикл заявки,\\nоркестрация, веб-UI бэк-офиса")
+    Container(rates, "Rates Service", "Java/Spring Boot", "НОВЫЙ: ведение ставок,\\nперсонализация, UI с RBAC")
+    Container(sms, "SMS Notification Service", "Java/Spring Boot", "НОВЫЙ: Kafka consumer;\\nотправка СМС через шлюз")
+
+    ContainerDb(dep_db, "Deposit DB", "PostgreSQL", "Заявки, статусы, аудит")
+    ContainerDb(rates_db, "Rates DB", "PostgreSQL", "Ставки, история, риск-метрики")
+    ContainerDb(redis, "Rates Cache", "Redis", "Кэш справочников ставок и продуктов")
+
+    Container(kafka, "Apache Kafka", "Kafka 3.x cluster", "Шина событий банка:\\ndeposit.applications.*, deposit.opened,\\nsms.outbound, rates.updated")
+    Container(smsgw, "СМС-шлюз банка", "Внутренний сервис", "Поддерживает IT-отдел")
+}
+
+System_Ext(telecom, "Telecom-оператор", "Доставка СМС")
+System_Ext(pccs, "Система партн. кол-центра", "Не интегрирована в MVP")
+
+' === Persons → Channels ===
+Rel(client, site, "HTTPS")
+Rel(client, ib_web, "HTTPS\\n(вход, платежи)")
+Rel(client, ib_dep, "HTTPS (депозиты)")
+Rel(branch, abs_dc, "Delphi UI\\n(KYC, открытие депозита)")
+Rel(op_cc, ccs, "Веб-UI")
+Rel(dep_mgr, dep, "Веб-UI\\n(согласование заявок)")
+Rel(dep_mgr, rates, "Веб-UI\\n(ввод ставок)")
+Rel(cred_mgr, rates, "Веб-UI\\n(риск-метрики)")
+
+' === Channels → API Gateway ===
+Rel(site, api_gw, "HTTPS / REST")
+Rel(ib_dep, api_gw, "HTTPS / REST")
+
+' === API Gateway → Services ===
+Rel(api_gw, dep, "REST")
+Rel(api_gw, rates, "REST")
+
+' === Services → Data ===
+Rel(ib_web, ib_db, "JDBC")
+Rel(dep, dep_db, "JDBC")
+Rel(rates, rates_db, "JDBC")
+Rel(rates, redis, "Redis protocol")
+
+' === АБС ===
+Rel(abs_dc, abs_ora, "PL/SQL (legacy)")
+Rel(abs_ad, abs_ora, "API АБС / JDBC")
+
+' === Kafka producers ===
+Rel(dep, kafka, "publish:\\ndeposit.applications.*")
+Rel(rates, kafka, "publish:\\nrates.updated")
+Rel(abs_ad, kafka, "publish:\\ndeposit.opened")
+Rel(ccs, kafka, "publish:\\nуточнения по заявке")
+
+' === Kafka consumers ===
+Rel(kafka, sms, "consume:\\nsms.outbound,\\ndeposit.opened")
+Rel(kafka, ccs, "consume:\\ndeposit.applications с сайта")
+Rel(kafka, abs_ad, "consume:\\ndeposit.applications.confirmed")
+
+' === SMS chain ===
+Rel(sms, smsgw, "HTTP / SOAP")
+Rel(smsgw, telecom, "SMPP / HTTPS")
+
+@enduml
