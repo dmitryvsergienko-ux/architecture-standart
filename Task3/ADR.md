@@ -68,17 +68,17 @@ Use Cases покрываются обеими C4-диаграммами (см. �
 
 Исходник: [`C4-context.puml`](C4-context.puml)
 
-[![C4 Context](https://www.plantuml.com/plantuml/svg/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml)](https://www.plantuml.com/plantuml/svg/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml)
+[![C4 Context](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml)](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml)
 
-[Открыть рендер C1 в полном размере (SVG)](https://www.plantuml.com/plantuml/svg/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml) · [PNG-версия](https://www.plantuml.com/plantuml/png/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml)
+[Открыть рендер C1 в полном размере (SVG)](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml) · [PNG-версия](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=png&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-context.puml)
 
 #### C2 — Container (ИБ и АБС детализированы)
 
 Исходник: [`C4-containers.puml`](C4-containers.puml)
 
-[![C4 Container](https://www.plantuml.com/plantuml/svg/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml)](https://www.plantuml.com/plantuml/svg/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml)
+[![C4 Container](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml)](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml)
 
-[Открыть рендер C2 в полном размере (SVG)](https://www.plantuml.com/plantuml/svg/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml) · [PNG-версия](https://www.plantuml.com/plantuml/png/proxy?cache=no&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml)
+[Открыть рендер C2 в полном размере (SVG)](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=svg&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml) · [PNG-версия](https://www.plantuml.com/plantuml/proxy?cache=no&fmt=png&src=https://raw.githubusercontent.com/dmitryvsergienko-ux/architecture-standart/solution/Task3/C4-containers.puml)
 
 #### Ключевые архитектурные решения
 
